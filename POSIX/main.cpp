@@ -14,12 +14,12 @@
 
 /* Define globally accessible variables and a mutex */
 
-#define NUMTHRDS 1
+#define NUMTHRDS 8
 #define VECLEN 5000000
 pthread_t callThd[NUMTHRDS];
 pthread_mutex_t mutexsum;
 double sum;
-int Comp[VECLEN];
+long Comp[VECLEN];
 
 /*
  The function dotprod is activated when the thread is created.
@@ -90,19 +90,19 @@ void *setTotalPrimes(void *arg) {
         end   = start + len ;
     }
     
-//    for (i = start; i < end; i++) {
-//        if (i < 3){
-//            if (i < 2) {
-//                Comp[i] = 1;
-//            }else{
-//                Comp[i] = 0;
-//            }
-//        }else{
-//            if (i % 2 == 0){
-//                Comp[i] = 1;
-//            }
-//        }
-//    }
+    for (i = start; i < end; i++) {
+        if (i < 3){
+            if (i < 2) {
+                Comp[i] = 1;
+            }else{
+                Comp[i] = 0;
+            }
+        }else{
+            if (i % 2 == 0){
+                Comp[i] = 1;
+            }
+        }
+    }
     
     for (i = start; i < end; i++) {
         if (i > 2) {
@@ -131,7 +131,7 @@ void *setTotalPrimes(void *arg) {
      structure, and unlock it upon updating.
      */
     pthread_mutex_lock (&mutexsum);
-    std::cout << "Start : " << start << "End : " << end << std::endl;
+//    std::cout << "Start : " << start << "End : " << end << std::endl;
     sum += mysum;
     pthread_mutex_unlock (&mutexsum);
     
@@ -155,24 +155,29 @@ int main (int argc, char *argv[])
     long i;
     void *status;
     pthread_attr_t attr;
-    
+    int input = 0;
+    int isLoop = 1;
     
     
     
     sum = 0;
+    do {
+        std::cout << "Do you want to do a loop (1 : yes / 0 : no) ?" << std::endl;
+        std::cin >> isLoop;
+        std::cout << std::endl;
+        if (isLoop != 1 && isLoop != 0 ) {
+            std::cout << "Wrong input!!!" << std::endl;
+        }
+    } while (isLoop != 1 && isLoop != 0);
+    
+    
+    
     pthread_mutex_init(&mutexsum, NULL);
     
     /* Create threads to perform the dotproduct  */
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     
-    Comp[0] = 1;
-    Comp[1] = 1;
-    for (i = 3; i < VECLEN; i++) {
-        if (i % 2 == 0){
-            Comp[i] = 1;
-        }
-    }
     
 	for(i=0; i<NUMTHRDS; i++)
     {
@@ -193,10 +198,34 @@ int main (int argc, char *argv[])
 	}
     
     /* After joining, print out the results and cleanup */
-    printf ("Sum =  %f \n", sum);
+    printf ("Total number of Prime =  %f \n", sum);
+    
+    std::cout << std::endl;
+    while (isLoop == 1) {
+        std::cout << "Prime or Not" << std::endl;
+        std::cout << "Please enter a number." << std::endl;
+        std::cin >> input;
+        if (input == 0){
+            isLoop = 0;
+            std::cout << "Program terminate" << std::endl;
+        } else if(input == 1){
+            std::cout << "You number " << input << " is not considered as Prime nor not Prime" << std::endl << std::endl;
+        }else{
+            if (input >= VECLEN) {
+                std::cout << "Please enter a smaller number." << std::endl;
+            }else {
+                std::cout << "Your number "<< input << " is "<< ((Comp[input] == 0) ? "Prime" : "Not Prime") << std::endl << std::endl;
+            }
+        }
+    }
+    
 //    for (int i = 0;  i < VECLEN; i++) {
 //        std::cout << i << ":" << Comp[i] << std::endl ;
 //    }
     pthread_mutex_destroy(&mutexsum);
     pthread_exit(NULL);
+    
+    
+
+    
 }
