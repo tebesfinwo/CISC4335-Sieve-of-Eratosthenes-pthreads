@@ -14,12 +14,12 @@
 
 /* Define globally accessible variables and a mutex */
 
-#define NUMTHRDS 4
+#define NUMTHRDS 1
 #define VECLEN 5000000
 pthread_t callThd[NUMTHRDS];
 pthread_mutex_t mutexsum;
 double sum;
-int Comp[VECLEN] = {0};
+int Comp[VECLEN];
 
 /*
  The function dotprod is activated when the thread is created.
@@ -83,38 +83,55 @@ void *setTotalPrimes(void *arg) {
     offset = (long)arg;
     printf ("I am thread number  %ld \n", offset);
     len = VECLEN/NUMTHRDS;
-    start = 1 + offset*len;
-    end   = start + len;
-    int upperBoundSqrRoot = (int) sqrt(end);
-    
-    for (i = start; i < end; i++) {
-        if (i > 2 && i % 2 == 0){
-            Comp[i] = 1;
-        }
+    start = offset*len;
+    if (NUMTHRDS == 3 && offset == 2) {
+        end   = start + len + 2;
+    }else {
+        end   = start + len ;
     }
     
-    for (i = start; i < upperBoundSqrRoot ; i++) {
+//    for (i = start; i < end; i++) {
+//        if (i < 3){
+//            if (i < 2) {
+//                Comp[i] = 1;
+//            }else{
+//                Comp[i] = 0;
+//            }
+//        }else{
+//            if (i % 2 == 0){
+//                Comp[i] = 1;
+//            }
+//        }
+//    }
+    
+    for (i = start; i < end; i++) {
         if (i > 2) {
             if (Comp[i] == 0) {
-                for (int x = i*i ; x < end; x += i){
-                    Comp[x] = 1;
+                for (int x = 3 ; x < i; x ++){
+                    if ( x*x > i)
+                        break;
+                    if ( x % 2 != 0 && i % x == 0 ){
+                        Comp[i] = 1;
+                        break;
+                    }
                 }
             }
         }
     }
     
     for (i = start; i < end; i++) {
-        if (Comp[i] == 0) {
+        if (i > 1 && Comp[i] == 0) {
             mysum++;
         }
     }
-    
+
     
     /*
      Lock a mutex prior to updating the value in the shared
      structure, and unlock it upon updating.
      */
     pthread_mutex_lock (&mutexsum);
+    std::cout << "Start : " << start << "End : " << end << std::endl;
     sum += mysum;
     pthread_mutex_unlock (&mutexsum);
     
@@ -149,6 +166,14 @@ int main (int argc, char *argv[])
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     
+    Comp[0] = 1;
+    Comp[1] = 1;
+    for (i = 3; i < VECLEN; i++) {
+        if (i % 2 == 0){
+            Comp[i] = 1;
+        }
+    }
+    
 	for(i=0; i<NUMTHRDS; i++)
     {
         /*
@@ -169,9 +194,9 @@ int main (int argc, char *argv[])
     
     /* After joining, print out the results and cleanup */
     printf ("Sum =  %f \n", sum);
-    for (int i = 0;  i < VECLEN; i++) {
-        std::cout << i << ":" << Comp[i] << std::endl ;
-    }
+//    for (int i = 0;  i < VECLEN; i++) {
+//        std::cout << i << ":" << Comp[i] << std::endl ;
+//    }
     pthread_mutex_destroy(&mutexsum);
     pthread_exit(NULL);
 }
