@@ -1,3 +1,17 @@
+/**
+ @author : Jun Han Ooi 
+ 
+ Name : Jun Han Ooi 
+ Class : CISC 4335 Parallel and Distributed Computing
+ Date : March 7th 2014
+ Homework 1. 
+ 
+ Sieve of Eratosthenes
+ 
+ */
+
+
+
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdio.h>
@@ -73,6 +87,8 @@ void *dotprod(void *arg)
  1 : composite 
  0 : prime
  
+ function to calculate the total number of primes.
+ 
  */
 void *setTotalPrimes(void *arg) {
     /* Define and use local variables for convenience */
@@ -84,12 +100,20 @@ void *setTotalPrimes(void *arg) {
     printf ("I am thread number  %ld \n", offset);
     len = VECLEN/NUMTHRDS;
     start = offset*len;
+    
+    /**
+     VECLEN is not divisible by 3.
+     */
     if (NUMTHRDS == 3 && offset == 2) {
         end   = start + len + 2;
     }else {
         end   = start + len ;
     }
     
+    
+    /**
+     Initialize the portion of Comp
+     */
     for (i = start; i < end; i++) {
         if (i < 3){
             if (i < 2) {
@@ -104,6 +128,9 @@ void *setTotalPrimes(void *arg) {
         }
     }
     
+    /**
+     Sieve of Eratoshenes. 
+     */
     for (i = start; i < end; i++) {
         if (i > 2) {
             if (Comp[i] == 0) {
